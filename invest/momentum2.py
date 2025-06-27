@@ -1,5 +1,5 @@
-import pandas as pd
-import os
+import pandas as pd 
+import os 
 from glob import glob
 from datetime import datetime
 
@@ -30,13 +30,13 @@ def create_1m_rtn(
     ym_list = df['STD-YM'].unique()
     return df, ym_list
 
-# 데이터를 로드하고 월별 수익률 계산해 
+# 데이터를 로드하고 월별 수익율 계산하여 
 # 새로운 데이터프레임에 추가하는 함수
 def data_load(
-        _path = "./data",
+        _path = "./data", 
         _ext = 'csv', 
-        _start = '2010-01-01',
-        _end = datetime.now(),
+        _start = '2010-01-01', 
+        _end = datetime.now(), 
         _col = 'Adj Close'
 ):
     files = glob(f"{_path}/*.{_ext}")
@@ -79,45 +79,39 @@ def data_load(
                 [month_last_df, last_df], axis=0)
     return stock_df, month_last_df
 
-# 구매 포지션을 잡아주는 함수 생성
+# 구매 포지션을 잡아주는 함수 생성 
 def create_position(
-        _df,
+        _df, 
         _pct = 0.4
 ):
-    # 복사본 생성
+    # 복사본 생성 
     month_rtn_df = _df.copy()
-    # _pct가 1보다 크거나 같은 숫자라면 100으로 나눠준다.
+    # _pct의 1보다 크거나 같은 숫자라면 100으로 나눠준다. 
     if _pct >= 1:
         _pct = _pct / 100
     
     # 인덱스를 리셋 
     month_rtn_df.reset_index(inplace=True)
-
     # 테이블을 재구조화 
     month_rtn_df = month_rtn_df.pivot_table(
         index = 'Date', 
         columns = 'CODE', 
         values = '1m_rtn'
-    )   
-    
-        # month_rtn_df의 데이터들을 랭크화(열의 값들은 이용)
+    )
+    # month_rtn_df의 데이터들을 랭크화(열의 값들은 이용)
     month_rtn_df = month_rtn_df.rank(axis=1, 
         ascending=False, 
         pct=True)
-    
-        # 상위의 40% 종목을 선택 
-    # where() 함수를 사용 
-        # where (조건식, 거짓일때 대입된 데이터)
+
     month_rtn_df = \
         month_rtn_df.where( month_rtn_df <= _pct, 0 )
     
     # 0이 아닌 데이터들은 1로 변환
     month_rtn_df[month_rtn_df != 0] =1
-
-    # stock_df의 code의 unique()를 변수에 저장 
+ 
     stock_codes = list(month_rtn_df.columns)
 
-        # 해당 일자의 구매하려는 종목들을 딕셔너리 생성 
+    # 해당 일자의 구매하려는 종목들을 딕셔너리 생성 
     sig_dict = dict()
 
     for idx in month_rtn_df.index:
@@ -128,12 +122,12 @@ def create_position(
         )
         # sig_dict에 추가
         sig_dict[idx] = ticker_list
-
+    
     return sig_dict, stock_codes
 
-# 구매내역을 추가하는 함수
+# 구매 내역을 추가하는 함수 
 # 거래내역 컬럼을 추가하는 함수 생성 
-def create_trade_book(_df, _codes, _sig_dict, multi_acc_rtn):
+def create_trade_book(_df, _codes, _sig_dict):
     # 복사본 생성 
     df = _df.copy()
     # stock_df를 재구조화 
@@ -145,7 +139,7 @@ def create_trade_book(_df, _codes, _sig_dict, multi_acc_rtn):
     for code in _codes:
         df[f"p_{code}"] = ""
         df[f"r_{code}"] = ""
-
+    
     # sig_dict를 이용해서 구매 전 준비내역을 추가 
     for date, codes in _sig_dict.items():
         # date : key -> 시계열 데이터 (말일 데이터)
@@ -156,10 +150,9 @@ def create_trade_book(_df, _codes, _sig_dict, multi_acc_rtn):
             # book에서 인덱스가 date인 컬럼이 r_code인 컬럼에 준비 내역을 추가
             df.loc[date, f"p_{code}"] = f"ready_{code}" 
     return df
-
-
+                
 # 보유 내역을 추가하는 함수 생성 
-def create_trading(_df, _codes, multi_acc_rtn):
+def create_trading(_df, _codes):
     buy_phase = False
     df = _df.copy()
     std_ym = ""
@@ -189,65 +182,66 @@ def create_trading(_df, _codes, multi_acc_rtn):
                 std_ym = ""
     return df
 
-# 수익률 계산하는 함수 생성
-def multi_return(_df, _codes, multi_acc_rtn):
-    # 복사본 생성
+# 수익율 계산하는 함수 생성 
+def multi_return(_df, _codes):
+    # 복사본 생성 
     df = _df.copy()
     rtn = 1
-    # 매수가 = dict 형태로 구성
+    # 매수가 dict 형태로 구성 
     buy_dict = dict()
-    # 매도가 = dict 형태로 구성
+    # 매도가 dict 형태로 구성
     sell_dict = dict()
 
-    # index를 기준으로 반복문 생성 -> 날짜별 매수, 매도 확인
+    # index를 기준으로 반복문 생성 -> 날짜별 매수, 매도 확인 
     for idx in df.index:
-        # 종목별로 매수, 매도를 확인
+        # 종목별로 매수, 매도를 확인 
         for code in _codes:
             # 매수의 조건 : 2행 전(shift(2))의 p_code가 ""
-            #             1행 전(shift(1))의 p_code가 'ready_code'
+            #             1행 전(shift())의 p_code가 'ready_code"
             #             현재 행의 p_code가 'buy_code'
-            if (df.shift(2).loc[idx, f"p_{code}"] == "") &\
-                (df.shift().loc[idx, f"p_{code}"] == f"ready_{code}") &\
+            if (df.shift(2).loc[idx, f"p_{code}"] == "") & \
+                (df.shift().loc[idx, f"p_{code}"] == f"ready_{code}") & \
                     (df.loc[idx, f"p_{code}"] == f"buy_{code}"):
-                    # 매수가 -> idx 행에 code 컬럼에 존재
+                    # 매수가  -> idx 행에 code 컬럼에 존재
                     buy_dict[code] = df.loc[idx, code]
                     print(f"매수일 : {idx}, 매수 종목 : {code}, 매수가 : {df.loc[idx, code]}")
-            # 매도의 조건 : 1행 전에 p_code가 buy_code
+            # 매도의 조건 : 1행 전의 p_code가 buy_code
             #              현재 행의 p_code가 ""
             elif (df.shift().loc[idx, f"p_{code}"] == f"buy_{code}") & \
                 (df.loc[idx, f"p_{code}"] == ""):
-                # 매도가 -> idx 행에 code 컬럼에 존재
+                # 매도가 -> idx 행에 code 컬럼에 존재 
                 sell_dict[code] = df.loc[idx, code]
-                # 수익률 계산
+                # 수익율 계산
                 rtn = sell_dict[code] / buy_dict[code]
                 df.loc[idx, f"r_{code}"] = rtn
-                print(f"매도일 : {idx}, 매도종목 : {code}, 매도가: {sell_dict[code]}, 수익율: {rtn}")
-            # buy_dict, sell_dict의 code 안에 매수가, 매도가 초기화
+                print(f"매도일 : {idx}, 매도 종목 : {code}, 매도가 : {sell_dict[code]}, 수익율 : {rtn}")
+            # buy_dict, sell_dict의 code 안에 매수가 매도가 초기화
             if df.loc[idx, f"p_{code}"] == "":
-                 buy_dict[code] = 0
-                 sell_dict[code] = 0
+                buy_dict[code] = 0
+                sell_dict[code] = 0
     return df
 
-    # 누적 수익률 계산
-    def multi_acc_rtn(_df, _codes):
-        # 복사본 생성
-        df = _df.copy()
-        acc_rtn = 1
+# 누적 수익율 계산 
+def multi_acc_rtn(_df, _codes):
+    # 복사본 생성 
+    df = _df.copy()
+    acc_rtn = 1
 
-        # 인덱스를 기준으로 반복문 생성
-        for idx in df.index:
-            count = 0
-            rtn = 0
-            for code in _codes:
-                # 수익률이 존재하는가?
-                if df.loc[idx, f"r_{code}"]:
-                    # 존재하는 경우
-                    count += 1
-                    rtn += df.loc[idx, f"r_{code}"]
-            if (rtn != 0) & (count != 0):
-                acc_rtn *= rtn / count
-                print(f"""누적 - 
-                매도일 : {idx}, 매도 종목수 : {count}, 
-                수익률 : {round( rtn / count , 2 )}""")
-            df.loc[idx, 'acc_rtn'] = acc_rtn
-        return df, acc_rtn
+    # 인덱스를 기준으로 반복문 생성
+    for idx in df.index:
+        count = 0
+        rtn = 0
+        for code in _codes:
+            # 수익율이 존재하는가?
+            if df.loc[idx, f"r_{code}"]:
+                # 존재하는 경우
+                count += 1
+                rtn += df.loc[idx, f"r_{code}"]
+        if (rtn != 0) & (count != 0):
+            acc_rtn *= rtn / count
+            print(f"""누적 - 
+            매도일 : {idx}, 매도 종목수 : {count}, 
+            수익율 : {round( rtn / count , 2 )}""")
+        df.loc[idx, 'acc_rtn'] = acc_rtn
+    return df, acc_rtn
+

@@ -14,7 +14,7 @@
         </div>
         <div>
             <label>투자의 시간 시간</label>
-            <!-- 유저가 선택할 수 있도록 선택 박스 생성-->
+            <!-- 유저가 선택할수 있도록 선택 박스 생성 -->
             <select name="s_year">
                 {% for year in range(2010, 2026) %}
                     <option value="{{year}}">{{year}}</option>
@@ -32,13 +32,13 @@
                     <option value="{{day}}">{{day}}</option>
                 {% endfor %}
             </select>
-            일          
+            일
         </div>
         <div>
             <label>투자 방법</label>
             <select name="kind">
                 <option value="bnh">바이앤홀드</option>
-                <option value="boll">볼린저밴드</option>
+                <option value="boll">볼린져밴드</option>
                 <option value="hall">할로윈</option>
                 <option value="mmt">모멘텀</option>
             </select>
@@ -46,6 +46,6 @@
         <div>
             <input type="submit">
         </div>
-    </form> 
+    </form>
 </body>
 </html>
