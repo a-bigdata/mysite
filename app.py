@@ -9,7 +9,7 @@ mydb = MyDB(
     _host = 'Jay00.mysql.pythonanywhere-services.com',
     _port = 3306,
     _user = 'Jay00',
-    _pw = '!2345678',
+    _pw = '1234',
     _db_name = 'Jay00$default'
 )
 
